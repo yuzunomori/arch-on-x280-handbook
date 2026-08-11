@@ -1,23 +1,8 @@
 # 🏛️ Arch Linux Installation Guide
 
-## 📋 Prerequisites & Variants
+## 💻 The Setup
 
-- **Reference Hardware:**
-  - Model: Lenovo ThinkPad X280
-  - CPU: Intel Core i5‑8350U
-  - Graphics: Intel UHD 620
-  - RAM: 8 GB LPDDR3
-  - Storage: 256 GB NVMe SSD
-  - Firmware: UEFI
-
-- **This guide uses:**
-  - Architecture: x86_64
-  - Storage: NVMe (`/dev/nvme0n1`)
-  - Filesystem: Btrfs
-  - Bootloader: GRUB
-  - CPU microcode: `intel-ucode`
-  - Secure Boot: disabled
-  - Swap: none
+This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 256GB NVMe SSD, UEFI) with x86_64 architecture, NVMe storage (`/dev/nvme0n1`), Btrfs filesystem, GRUB bootloader, Intel microcode, Secure Boot turned off, and no swap configured.
 
 ---
 
@@ -299,9 +284,7 @@
 
 ---
 
-## 🙏 Credits
+## 🤝 Credits & Contributions  
+This guide is adapted and tweaked from **Josean Martinez’s** YouTube video [*The Only Arch Linux Installation Guide You'll Ever Need*](https://www.youtube.com/watch?v=TS1ghG3c3xI), with a bit of help from AI along the way.
 
-This custom guide was written after following and adapting steps from the video:
-[The Only Arch Linux Installation Guide You'll Ever Need](https://www.youtube.com/watch?v=TS1ghG3c3xI) by **Josean Martinez**
-
----
+I’m still learning my way around Arch, so this file may have rough edges. Contributions, fixes, and tips are welcome — feel free to open a pull request or drop feedback to help polish it.

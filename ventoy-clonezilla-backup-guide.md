@@ -54,7 +54,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
 9. Select **device-image** option.
 10. Select **local_dev** option.
 11. Insert backup drive back into the laptop and press `Enter`.
-12. Wait until you see your backup drive listed on the screen then press `Ctrl + C` to exit.
+12. Wait until you see your backup drive listed on the screen then press `Ctrl + C` to exit the device scan.
 13. Select your target partition to store the backup.
 14. Select **no-fsck** to skip file system checking.
 15. Select the **Clonezilla image repository** (press `Tab` twice to highlight `<Done>`, then `Enter`).
@@ -63,7 +63,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
 18. Select **Beginner** mode.
 19. Select **saveparts** for partitions backup.
 20. Name your backup `backup-yyyy-mm-dd-short-description` without extension.
-21. Select partitions you want to back up. Default is select both `nvme0n1p1` and `nvme0n1p2`.
+21. Select partitions you want to back up. By default, select both EFI (`nvme0n1p1`) and Btrfs (`nvme0n1p2`) partitions.
 22. Select **-z9p** compression.
 23. Select **-sfsck** to skip filesystem check.
 24. Select **Yes, check the saved image** to verify that backup is restorable.
@@ -74,7 +74,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
 29. Review source partitions then confirm by typing `y` then `Enter`.
 30. Wait for Clonezilla to complete the backup.
 31. After everything is done, press `Enter`.
-32. When prompted, select **cmd** to enter command line prompt.
+32. When prompted, select **cmd** to drop into the shell.
 33. Backup your disk layout so it can be restored later:
     ```
     # Find your backup drive
@@ -105,7 +105,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     > - `SOURCE_DEV` → your source disk (e.g., `/dev/nvme0n1`)  
     > - `BACKUP_DEV` → your backup drive (e.g., `/dev/sdb1`)
 
-    ```bash
+    ```
     # Define variables
     BACKUP_NAME=""
     SOURCE_DEV=""
@@ -125,7 +125,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     sudo umount /mnt/backup
     mount | grep /mnt/backup
     
-    # 6. Reboot manually
+    # Reboot manually
     sudo reboot
     ```
 

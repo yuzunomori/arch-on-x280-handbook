@@ -132,7 +132,58 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
 ---
 
 ## 🔄 Restore from Backup
-Recover `sfdisk` + Clonezilla `restoreparts`.
+
+> **Scope:** This guide is designed for restoring to the same physical SSD (including wiped or corrupted partitions).
+
+1. Turn off **Secure Boot** before proceeding.
+2. Insert backup drive into the laptop and power it on.
+3. Enter Boot Menu, then boot from backup drive.
+4. From Ventoy boot menu, select **Clonezilla Live ISO**, then select **Boot in normal mode**.
+5. From Clonezilla boot menu, select **Clonezilla live (VGA, 800x600 & To RAM)** and wait.
+6. When language selection is prompted, remove your backup drive.
+7. Select your preferred language and keyboard layout.
+8. _Optional_ — **In case the disk was wiped or corrupted**:
+    - After selecting your preferred language and keyboard layout, select **Enter_shell** to enter command line prompt.
+    - Restore partition table layout:
+        ```
+        # Mount backup drive
+        sudo mkdir -p /mnt/backup
+        sudo mount /dev/[backup_partition] /mnt/backup
+        
+        # Restore partition table layout
+        sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+        
+        # Safely unmount the backup drive
+        sudo umount /mnt/backup
+        ```
+    - Exit the shell and return to Clonezilla menu:
+        ```
+        exit
+        ```
+9. Select **Start Clonezilla**.
+10. Select **device-image** option.
+11. Select **local_dev** option.
+12. Insert backup drive back into the laptop and press `Enter`.
+13. Wait until you see your backup drive listed on the screen then press `Ctrl + C` to exit the device scan.
+14. Select your backup drive partition where the backup image is saved.
+15. Select **no-fsck** to skip file system checking.
+16. Select the **Clonezilla image repository** (press `Tab` twice to highlight `<Done>`, then `Enter`).
+17. Review target source then press `Enter` to continue.
+18. Clonezilla will ask about time synchronization; skip it if you have no internet connection.
+19. Select **Beginner** mode.
+20. Select **restoreparts** for partitions restore.
+21. Select your image file to restore.
+22. Select partitions to be restored. By default, select both EFI (`nvme0n1p1`) and Btrfs (`nvme0n1p2`) partitions.
+23. Select **Yes, check the saved image** to verify that backup is restorable.
+24. Select **No, do not copy log files to a Clonezilla Live USB drive.**
+25. Select **-p** to manually choose option after restoration is finished.
+26. Clonezilla will prompt with direct command to use next time, press `Enter`.
+27. Clonezilla will warn you about existing data loss, review it then confirm by typing `y` then `Enter`.
+28. Clonezilla will ask you again, confirm by typing `y` then `Enter`.
+29. Wait for Clonezilla to complete the restoration.
+30. After everything is done, press `Enter`.
+31. When prompted, select **reboot** to restart your device.
+32. Done! Now you can safely remove your backup drive.
 
 ---
 

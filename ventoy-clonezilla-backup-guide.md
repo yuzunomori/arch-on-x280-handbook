@@ -103,9 +103,9 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 35. Done! Now you can safely remove your backup drive.
 36. For experienced users, here are compact commands you can run separately after the Clonezilla backup. This is optional and not part of the main guide — beginners may safely skip it.
 
-    > ⚠️ Remember to edit the variables before executing:  
-    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)  
-    > - `SOURCE_DEV` → your source disk (e.g., `/dev/nvme0n1`)  
+    > ⚠️ Remember to edit the variables before executing:
+    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)
+    > - `SOURCE_DEV` → your source disk (e.g., `/dev/nvme0n1`)
     > - `BACKUP_DEV` → your backup drive (e.g., `/dev/sdb1`)
 
     ```
@@ -195,9 +195,9 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 33. Done! Now you can safely remove your backup drive.
 34. For experienced users, here are compact commands you can run separately in command line to restore. This is optional and not part of the main guide — beginners may safely skip it.
 
-    > ⚠️ Remember to edit the variables before executing:  
-    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)  
-    > - `TARGET_DEV` → your target disk (e.g., `/dev/nvme0n1`)  
+    > ⚠️ Remember to edit the variables before executing:
+    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)
+    > - `TARGET_DEV` → your target disk (e.g., `/dev/nvme0n1`)
     > - `BACKUP_DEV` → your backup drive partition (e.g., `/dev/sdb1`)
 
     ```bash

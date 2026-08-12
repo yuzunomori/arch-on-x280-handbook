@@ -82,7 +82,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     
     # Mount backup drive
     sudo mkdir -p /mnt/backup
-    sudo mount /dev/[device_name] /mnt/backup
+    sudo mount /dev/[backup_partition] /mnt/backup
     
     # Dump partition table
     sudo sfdisk -d /dev/nvme0n1 > dump.sfdisk
@@ -114,7 +114,7 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     # Run Clonezilla backup (confirm when prompted)
     sudo /usr/sbin/ocs-sr -q2 -c -j2 -edio -z9p -i 4096 -sfsck -sgoc -p choose saveparts "$BACKUP_NAME" ${SOURCE_DEV}p1 ${SOURCE_DEV}p2
     
-    # After finished, enter command line then run these command to mount backup drive
+    # After finishing, drop into the command line and run these commands to mount the backup drive
     sudo mkdir -p /mnt/backup
     sudo mount $BACKUP_DEV /mnt/backup
     

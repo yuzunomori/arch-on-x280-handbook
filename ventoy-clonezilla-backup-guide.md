@@ -2,9 +2,9 @@
 
 ## 💻 The Setup
 
-This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partitions instead of cloning the entire disk. A single external SSD prepared with Ventoy serves double duty — booting Clonezilla and Arch Linux ISOs, while also storing backup images and partition table dumps. The SSD is a Hikvision C100 120GB inside an ORICO enclosure with a USB 3.0 Micro‑B cable. Your filesystem, partition layout, or enclosure may differ, but the workflow remains the same.
+This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of cloning the whole disk, we’re only backing up the EFI and Btrfs partitions — it’s faster, cleaner, and keeps your data organized. I use a 120GB Hikvision SSD in an ORICO enclosure, but any external drive works.
 
----
+> ⚠️ **Scope & Limitations:** This guide is strictly for full-system recovery on the same SSD (`/dev/nvme0n1`). Because we save and restore the exact partition geometry and file system UUIDs, you won’t need to mess with resizing or re-configuring bootloaders after a restore — you’ll be back exactly where you started. If you are migrating to a different disk, you'll need additional steps.
 
 ## 💿 Prepare Backup Drive
 
@@ -89,7 +89,10 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     
     # Copy partition table dump file to backup drive
     sudo cp dump.sfdisk /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
-
+    
+    # Flush buffers
+    sync
+    
     # Safely unmount the backup drive
     sudo umount /mnt/backup
     ```
@@ -120,6 +123,9 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     
     # Dump partition table layout
     sudo sfdisk -d $SOURCE_DEV | sudo tee /mnt/backup/${BACKUP_NAME}.sfdisk > /dev/null
+
+    # Flush buffers
+    sync
     
     # Safely unmount and verify
     sudo umount /mnt/backup
@@ -153,8 +159,11 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     sudo swapoff -a 2>/dev/null
     sudo umount /dev/nvme0n1p* 2>/dev/null
     
-    # Restore partition table
+    # Restore partition table (replace filename with your actual saved .sfdisk file)
     sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+
+    # Flush buffers
+    sync
     
     # Clean up before entering Clonezilla wizard
     sudo umount /mnt/backup
@@ -205,6 +214,9 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     sudo swapoff -a 2>/dev/null
     sudo umount ${TARGET_DEV}p* 2>/dev/null
     sudo sfdisk $TARGET_DEV < /home/partimag/${BACKUP_NAME}.sfdisk
+
+    # Flush buffers
+    sync
 
     # Run Clonezilla partition restore
     sudo /usr/sbin/ocs-sr -e1 auto -e2 -t -r -edio -c -k -p choose restoreparts "$BACKUP_NAME" ${TARGET_DEV}p1 ${TARGET_DEV}p2

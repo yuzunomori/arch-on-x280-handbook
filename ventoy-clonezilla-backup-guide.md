@@ -31,11 +31,11 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     
     # After creating the backup image and saving the partition dump, the drive will look like this:
     📁 Ventoy Drive Root/
-    ├── 📁 ISOs/                                    # Contains your bootable ISO files
+    ├── 📁 ISOs/                                        # Contains your bootable ISO files
     │   ├── clonezilla-live-3.3.3-15-amd64.iso
     │   └── archlinux-2026.08.01-x86_64.iso
-    ├── 📁 backup-260808-fresh-arch-install/        # Renamed from Clonezilla’s auto folder
-    └── 📄 backup-260808-fresh-arch-install.sfdisk  # Partition dump file, aligned to same convention
+    ├── 📁 backup-yyyy-mm-dd-short-description/         # Renamed from Clonezilla’s auto folder
+    └── 📄 backup-yyyy-mm-dd-short-description.sfdisk   # Partition dump file, aligned to same convention
     ```
 7. Safely eject and remove the Ventoy backup drive.
 

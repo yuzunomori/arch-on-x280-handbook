@@ -200,7 +200,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     > - `TARGET_DEV` → your target disk (e.g., `/dev/nvme0n1`)
     > - `BACKUP_DEV` → your backup drive partition (e.g., `/dev/sdb1`)
 
-    ```bash
+    ```
     # Define variables
     BACKUP_NAME=""
     TARGET_DEV=""
@@ -221,6 +221,48 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     # Run Clonezilla partition restore
     sudo /usr/sbin/ocs-sr -e1 auto -e2 -t -r -edio -c -k -p choose restoreparts "$BACKUP_NAME" ${TARGET_DEV}p1 ${TARGET_DEV}p2
     ```
+
+---
+
+## 📋 Post-Restore Verification
+
+Once you reboot and log back into your system, run these quick checks to ensure your filesystem, mounts, and hardware state are 100% healthy:
+
+- **Verify Partition Boundaries & UUIDs**  
+    Confirm `sfdisk` aligned the partitions correctly and systemd mounted them via the expected UUIDs:
+    ```
+    # Verify partition UUIDs match /etc/fstab
+    lsblk -f
+    
+    # Confirm root and boot mountpoints are clean
+    findmnt -nt btrfs,vfat
+    ```
+- **Check Btrfs Filesystem Health & Run Scrub**  
+    Verify partition capacity is fully recognized and run an active checksum scrub to catch block corruption:
+    ```
+    # Check mounted subvolume capacity and metadata allocation
+    sudo btrfs filesystem usage /
+    
+    # Run an immediate integrity scrub (reads all blocks against metadata hashes)
+    sudo btrfs scrub start -B /
+    
+    # Check hardware/driver I/O error stats
+    sudo btrfs device stats /
+    ```
+    _(All counters in device stats should be 0. If any are non-zero, log them and reset with `sudo btrfs device stats -z /`)._
+- **Check System Logs for Storage & Driver Errors**  
+    Scan the journal from the current boot to ensure no NVMe driver, Btrfs metadata, or partition mount warnings occurred:
+    ```
+    # Check for high-priority kernel or disk errors from current boot
+    journalctl -p 3 -b
+    ```
+- **Verify EFI Boot Entries**
+    Ensure your motherboard firmware still recognizes the Arch Linux boot entry:
+    ```
+    # List UEFI boot entries
+    efibootmgr
+    ```
+    _(If the output is empty or missing `Arch Linux`, you will need to re-install the bootloader using `grub-install` or `bootctl install` from a live USB)._
 
 ---
 

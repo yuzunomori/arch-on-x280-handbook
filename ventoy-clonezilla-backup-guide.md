@@ -97,7 +97,37 @@ This guide uses a Btrfs filesystem and backs up only the EFI and Btrfs partition
     ```
     sudo reboot
     ```
-35. Now you can freely remove your backup drive.
+35. Done! Now you can safely remove your backup drive.
+36. For experienced users, here are compact commands you can run separately after the Clonezilla backup. This is optional and not part of the main guide — beginners may safely skip it.
+
+    > ⚠️ Remember to edit the variables before executing:  
+    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)  
+    > - `SOURCE_DEV` → your source disk (e.g., `/dev/nvme0n1`)  
+    > - `BACKUP_DEV` → your backup drive (e.g., `/dev/sdb1`)
+
+    ```bash
+    # Define variables
+    BACKUP_NAME=""
+    SOURCE_DEV=""
+    BACKUP_DEV=""
+    
+    # Run Clonezilla backup (confirm when prompted)
+    sudo /usr/sbin/ocs-sr -q2 -c -j2 -edio -z9p -i 4096 -sfsck -sgoc -p choose saveparts "$BACKUP_NAME" ${SOURCE_DEV}p1 ${SOURCE_DEV}p2
+    
+    # After finished, enter command line then run these command to mount backup drive
+    sudo mkdir -p /mnt/backup
+    sudo mount $BACKUP_DEV /mnt/backup
+    
+    # Dump partition table layout
+    sudo sfdisk -d $SOURCE_DEV | sudo tee /mnt/backup/${BACKUP_NAME}.sfdisk > /dev/null
+    
+    # Safely unmount and verify
+    sudo umount /mnt/backup
+    mount | grep /mnt/backup
+    
+    # 6. Reboot manually
+    sudo reboot
+    ```
 
 ---
 

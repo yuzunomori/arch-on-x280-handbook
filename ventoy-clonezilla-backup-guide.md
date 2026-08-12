@@ -105,6 +105,8 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 
 ## 🔄 Restore from Backup
 
+> **Scope:** This guide is designed for restoring to the same physical SSD (including wiped or corrupted partitions).
+
 1. Turn off **Secure Boot** before proceeding.
 2. Insert backup drive into the laptop and power it on.
 3. Enter Boot Menu, then boot from backup drive.
@@ -198,7 +200,7 @@ Once you reboot and log back into your system, run these quick checks to ensure 
     # Check for high-priority kernel or disk errors from current boot
     journalctl -p 3 -b
     ```
-- **Verify EFI Boot Entries**
+- **Verify EFI Boot Entries**  
     Ensure your motherboard firmware still recognizes the Arch Linux boot entry:
     ```
     # List UEFI boot entries
@@ -209,8 +211,41 @@ Once you reboot and log back into your system, run these quick checks to ensure 
 ---
 
 ## ⚙️ Maintenance
-Update ISOs, verify backups, organize files.
+
+Keep your backup USB reliable, keep backup sizes minimal, and manage your image lifecycle over time.
+
+1. **Pre-Backup OS & Btrfs Cleanup**
+    Since Clonezilla copies all used filesystem blocks, clean up unnecessary data on Arch before booting into Clonezilla to keep image sizes small (~3–8 GB):
+    ```
+    # Keep only the current version of installed packages in pacman cache
+    sudo paccache -r
+    
+    # Trim systemd journal logs older than 14 days
+    sudo journalctl --vacuum-time=2w
+    
+    # Check unallocated space and metadata usage ratio
+    sudo btrfs filesystem usage /
+    
+    # Prevent metadata ENOSPC errors by reclaiming sparse data & metadata chunks
+    sudo btrfs balance start -dusage=20 -musage=20 /
+    
+    # Check for hardware/driver errors and run checksum scrub
+    sudo btrfs device stats /
+    sudo btrfs scrub start -B /
+    
+    # Trim NVMe blocks to maintain drive performance
+    sudo fstrim -v /
+    ```
+2. **Image Retention & Storage Management**
+    With a 120GB Hikvision SSD and compressed image sets averaging ~5 GB, your drive can easily store 10–15 historical backups alongside your ISOs. When cleaning up space, always delete both the backup folder and its paired partition dump file.
+3. **Ventoy & ISO Lifecycle**
+    - Upgrade Ventoy using `Ventoy2Disk` (or the Linux script) with the Update option (`-u`) — this updates the bootloader on your external drive without touching your ISOs or backup images.
+    - Update your `archlinux-YYYY.MM.DD-x86_64.iso` every few months so you have a modern kernel and up-to-date Btrfs/GRUB tools if you ever need to `chroot` or repair boot entries via `efibootmgr`.
 
 ---
 
 ## 🤝 Credits & Contributions
+
+This guide came together through hands-on testing on my own machine, refined with a bit of help from AI (Gemini, Copilot, and ChatGPT). I’ve personally run through these steps to make sure everything works, but I’m still actively learning Arch Linux and discovering better ways to do things.
+
+If you spot anything that could be improved, fixed, or made more efficient, I’d love to hear it! Pull requests, feedback, and tips are always welcome to help keep this guide solid.

@@ -82,7 +82,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     
     # Mount backup drive
     sudo mkdir -p /mnt/backup
-    sudo mount /dev/[backup_partition] /mnt/backup
+    sudo mount [backup_partition, "/dev/sdb1"] /mnt/backup
     
     # Dump partition table
     sudo sfdisk -d /dev/nvme0n1 > dump.sfdisk
@@ -93,53 +93,17 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     # Flush buffers
     sync
     
-    # Safely unmount the backup drive
+    # Safely unmount
     sudo umount /mnt/backup
-    ```
-34. Exit the Clonezilla shell and reboot the system:
-    ```
-    sudo reboot
-    ```
-35. Done! Now you can safely remove your backup drive.
-36. For experienced users, here are compact commands you can run separately after the Clonezilla backup. This is optional and not part of the main guide — beginners may safely skip it.
-
-    > ⚠️ Remember to edit the variables before executing:
-    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)
-    > - `SOURCE_DEV` → your source disk (e.g., `/dev/nvme0n1`)
-    > - `BACKUP_DEV` → your backup drive (e.g., `/dev/sdb1`)
-
-    ```
-    # Define variables
-    BACKUP_NAME=""
-    SOURCE_DEV=""
-    BACKUP_DEV=""
-    
-    # Run Clonezilla backup (confirm when prompted)
-    sudo /usr/sbin/ocs-sr -q2 -c -j2 -edio -z9p -i 4096 -sfsck -sgoc -p choose saveparts "$BACKUP_NAME" ${SOURCE_DEV}p1 ${SOURCE_DEV}p2
-    
-    # After finishing, drop into the command line and run these commands to mount the backup drive
-    sudo mkdir -p /mnt/backup
-    sudo mount $BACKUP_DEV /mnt/backup
-    
-    # Dump partition table layout
-    sudo sfdisk -d $SOURCE_DEV | sudo tee /mnt/backup/${BACKUP_NAME}.sfdisk > /dev/null
-
-    # Flush buffers
-    sync
-    
-    # Safely unmount and verify
-    sudo umount /mnt/backup
-    mount | grep /mnt/backup
     
     # Reboot manually
     sudo reboot
     ```
+34. Done! Now you can safely remove your backup drive.
 
 ---
 
 ## 🔄 Restore from Backup
-
-> **Scope:** This guide is designed for restoring to the same physical SSD (including wiped or corrupted partitions).
 
 1. Turn off **Secure Boot** before proceeding.
 2. Insert backup drive into the laptop and power it on.
@@ -149,23 +113,29 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 6. When language selection is prompted, remove your backup drive.
 7. Select your preferred language and keyboard layout.
 8. Select **Enter_shell** to enter the command line.
-9. Run these commands to restore your exact partition boundaries:
+9. Before running the Clonezilla wizard, restore your exact partition boundaries:
     ```
-    # Mount your backup drive
-    sudo mkdir -p /mnt/backup
-    sudo mount /dev/[backup_partition] /mnt/backup
+    # Find your backup drive
+    lsblk
     
-    # Free target disk locks
+    # Mount backup drive to a neutral location
+    sudo mkdir -p /mnt/backup
+    sudo mount [backup_partition, "/dev/sdb1"] /mnt/backup
+    
+    # Free target locks
     sudo swapoff -a 2>/dev/null
     sudo umount /dev/nvme0n1p* 2>/dev/null
-    
-    # Restore partition table (replace filename with your actual saved .sfdisk file)
+
+    # Restore partition table
     sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+
+    # Force kernel to re-read the updated partition table
+    sudo partprobe /dev/nvme0n1
 
     # Flush buffers
     sync
     
-    # Clean up before entering Clonezilla wizard
+    # Clean up and return to the wizard
     sudo umount /mnt/backup
     exit
     ```
@@ -193,34 +163,6 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 31. After everything is done, press `Enter`.
 32. When prompted, select **reboot** to restart your device.
 33. Done! Now you can safely remove your backup drive.
-34. For experienced users, here are compact commands you can run separately in command line to restore. This is optional and not part of the main guide — beginners may safely skip it.
-
-    > ⚠️ Remember to edit the variables before executing:
-    > - `BACKUP_NAME` → set to today’s date with short description (e.g., `backup-2026-08-12-fresh-arch-install`)
-    > - `TARGET_DEV` → your target disk (e.g., `/dev/nvme0n1`)
-    > - `BACKUP_DEV` → your backup drive partition (e.g., `/dev/sdb1`)
-
-    ```
-    # Define variables
-    BACKUP_NAME=""
-    TARGET_DEV=""
-    BACKUP_DEV=""
-
-    # Mount backup drive
-    sudo mkdir -p /home/partimag
-    sudo mount $BACKUP_DEV /home/partimag
-
-    # Reset partition table layout (Always run to ensure geometry matches backup)
-    sudo swapoff -a 2>/dev/null
-    sudo umount ${TARGET_DEV}p* 2>/dev/null
-    sudo sfdisk $TARGET_DEV < /home/partimag/${BACKUP_NAME}.sfdisk
-
-    # Flush buffers
-    sync
-
-    # Run Clonezilla partition restore
-    sudo /usr/sbin/ocs-sr -e1 auto -e2 -t -r -edio -c -k -p choose restoreparts "$BACKUP_NAME" ${TARGET_DEV}p1 ${TARGET_DEV}p2
-    ```
 
 ---
 

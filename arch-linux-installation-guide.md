@@ -2,7 +2,20 @@
 
 ## 💻 The Setup
 
-This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 256GB NVMe SSD, UEFI) with x86_64 architecture, NVMe storage (`/dev/nvme0n1`), Btrfs filesystem, GRUB bootloader, Intel microcode, Secure Boot turned off, and no swap configured.
+This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 256GB NVMe SSD, UEFI) with x86_64 architecture, Btrfs filesystem, GRUB bootloader, Intel microcode, Secure Boot turned off, and no swap configured.
+
+The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and variables may vary:
+
+| Variable | Example Value | Description |
+| :--- | :--- | :--- |
+| **Internal Drive** | `/dev/nvme0n1` | Target NVMe node (`/dev/sda` for SATA). |
+| **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
+| **Root Partition** | `/dev/nvme0n1p2` | Remaining space formatted as Btrfs. |
+| **Hostname** | `x280` | System network identification name. |
+| **Username** | `your-name-here` | Default sudo user account name. |
+| **Country Code** | `TH` | Two-letter ISO country code for mirror ranking. |
+
+> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `wipefs` or `mkfs`.
 
 ---
 
@@ -26,13 +39,12 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
     setfont ter-120b
     ```
-2. Connect to Wi-Fi (Usually `wlan0`):
+2. Connect to Wi-Fi:
     ```
     iwctl
-    device list
-    station [device_name] scan
-    station [device_name] get-networks
-    station [device_name] connect [network_name]
+    station wlan0 scan
+    station wlan0 get-networks
+    station wlan0 connect "your_wifi_name"
     exit
     ```
 3. Verify internet connection:
@@ -62,7 +74,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     fdisk -l
 
     # Modify target disk partition:
-    cfdisk [disk_name, "/dev/nvme0n1"]
+    cfdisk /dev/nvme0n1
     ```
 2. Delete all partitions until you see only **Free space** row left.
 3. Create boot partition:
@@ -82,21 +94,21 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 7. Clean up signature of each partition:
     ```
-    wipefs -a [partition_name, "/dev/nvme0n1p1"]
-    wipefs -a [partition_name, "/dev/nvme0n1p2"]
+    wipefs -a /dev/nvme0n1p1
+    wipefs -a /dev/nvme0n1p2
     ```
 8. Format boot partition:
     ```
-    mkfs.fat -F 32 [partition_name, "/dev/nvme0n1p1"]
+    mkfs.fat -F 32 /dev/nvme0n1p1
     ```
 9. Format root partition:
     ```
-    mkfs.btrfs [partition_name, "/dev/nvme0n1p2"]
+    mkfs.btrfs /dev/nvme0n1p2
     ```
 10. Prepare `Btrfs` subvolumes:
     ```
     # Temporary mount
-    mount [partition_name, "/dev/nvme0n1p2"] /mnt
+    mount /dev/nvme0n1p2 /mnt
 
     # Create subvolumes
     btrfs subvolume create /mnt/@
@@ -109,16 +121,16 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     umount /mnt
 
     # Mount root subvolume
-    mount -o noatime,compress=zstd,ssd,discard=async,subvol=@ [partition_name, "/dev/nvme0n1p2"] /mnt
+    mount -o noatime,compress=zstd,ssd,discard=async,subvol=@ /dev/nvme0n1p2 /mnt
 
     # Create mount points for home
     mkdir -p /mnt/{boot,home}
 
     # Mount home subvolume
-    mount -o noatime,compress=zstd,ssd,discard=async,subvol=@home [partition_name, "/dev/nvme0n1p2"] /mnt/home
+    mount -o noatime,compress=zstd,ssd,discard=async,subvol=@home /dev/nvme0n1p2 /mnt/home
 
     # Mount EFI
-    mount [partition_name, "/dev/nvme0n1p1"] /mnt/boot
+    mount /dev/nvme0n1p1 /mnt/boot
 
     # Verify
     mount | grep btrfs
@@ -138,7 +150,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 2. Install essential packages:
     ```
-    pacstrap -K /mnt base linux linux-firmware networkmanager vim base-devel intel-ucode btrfs-progs mesa vulkan-intel intel-media-driver
+    pacstrap -K /mnt base linux linux-firmware networkmanager wpa_supplicant vim base-devel intel-ucode btrfs-progs mesa vulkan-intel intel-media-driver
     ```
 3. Generate `fstab` and verify:
     ```
@@ -162,7 +174,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ln -sf /usr/share/zoneinfo/Asia/Bangkok /etc/localtime
     hwclock --systohc
     ```
-3. Configure locale by uncomment at least one locale you plan to use (e.g. en_US.UTF-8 UTF-8):
+3. Configure locale by uncommenting at least one locale you plan to use (e.g. `en_US.UTF-8 UTF-8`):
     ```
     vim /etc/locale.gen
     locale-gen
@@ -174,7 +186,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 5. Set hostname and verify:
     ```
-    echo "[hostname]" > /etc/hostname
+    echo "x280" > /etc/hostname
     ```
 6. Enable networking:
     ```
@@ -186,10 +198,10 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 8. Add new user and set the password:
     ```
-    useradd -m -G wheel [username]
-    passwd [username]
+    useradd -m -G wheel your-name-here
+    passwd your-name-here
     ```
-9. Make members of group wheel execute any command by uncomment **%wheel ALL=(ALL:ALL) ALL**:
+9. Make members of group wheel execute any command by uncommenting **%wheel ALL=(ALL:ALL) ALL**:
     ```
     visudo
     ```
@@ -231,7 +243,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     # Connect
     nmcli device
     nmcli device wifi list
-    nmcli device wifi connect "[wifi_ssid]" password "[wifi_password]"
+    nmcli device wifi connect "your_wifi_name" password "your_wifi_password"
     
     # Verify
     ip addr show
@@ -284,7 +296,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
 
 ---
 
-## 🤝 Credits & Contributions  
+## 🤝 Credits & Contributions
 This guide is adapted and tweaked from **Josean Martinez’s** YouTube video [*The Only Arch Linux Installation Guide You'll Ever Need*](https://www.youtube.com/watch?v=TS1ghG3c3xI), with a bit of help from AI along the way.
 
 I’m still learning my way around Arch, so this file may have rough edges. Contributions, fixes, and tips are welcome — feel free to open a pull request or drop feedback to help polish it.

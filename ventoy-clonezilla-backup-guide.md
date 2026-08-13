@@ -4,6 +4,18 @@
 
 This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of cloning the whole disk, we’re only backing up the EFI and Btrfs partitions — it’s faster, cleaner, and keeps your data organized. I use a 120GB Hikvision SSD in an ORICO enclosure, but any external drive works.
 
+The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and file names may vary:
+
+| Variable | Example Value | Description |
+| :--- | :--- | :--- |
+| **Internal Drive** | `/dev/nvme0n1` | Target NVMe node (`/dev/sda` for SATA). |
+| **Backup Drive** | `/dev/sdb1` | External USB partition (verify via `lsblk`). |
+| **Backup Name** | `backup-yyyy-mm-dd-short-description` | Follow this custom naming convention. |
+
+> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `sfdisk` or `grub-install`.
+
+---
+
 ## 💿 Prepare Backup Drive
 
 1. Download **Ventoy** for Windows:
@@ -83,7 +95,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     
     # Mount backup drive
     sudo mkdir -p /mnt/backup
-    sudo mount [backup_partition, "/dev/sdb1"] /mnt/backup
+    sudo mount /dev/sdb1 /mnt/backup
     
     # Dump partition table
     sudo sfdisk -d /dev/nvme0n1 > dump.sfdisk
@@ -124,7 +136,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     
     # Mount backup drive to a neutral location
     sudo mkdir -p /mnt/backup
-    sudo mount [backup_partition, "/dev/sdb1"] /mnt/backup
+    sudo mount /dev/sdb1 /mnt/backup
     
     # Free target locks
     sudo swapoff -a 2>/dev/null
@@ -165,19 +177,30 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 29. Clonezilla will ask you again, confirm by typing `y` then `Enter`.
 30. Wait for Clonezilla to complete the restoration.
 31. After everything is done, press `Enter`.
-32. When prompted, select **cmd** to drop into the shell once again.
-33. Run post‑restore reconfiguration commands:
+32. When prompted, select **Reboot**.
+33. Done! Now you can safely remove your backup drive.
+
+---
+
+## 📋 Post-Restore Verification
+
+> Note: Run these commands after booting into your restored Arch system. If restoring to a brand-new SSD and the system fails to boot, boot from your Arch ISO and `arch-chroot` into your system to run these commands.
+
+After reboot, confirm your system is healthy and consistent:
+
+- **System Reconfiguration & UUID Verification :** Confirm mount points, update `/etc/fstab` if hardware changed, and refresh boot binaries:
     ```
-    # View existing /etc/fstab
-    sudo cat /etc/fstab
+    # Confirm root and boot mountpoints are clean
+    findmnt -nt btrfs,vfat
     
     # Compare partition UUIDs with /etc/fstab
     lsblk -f
+    sudo cat /etc/fstab
 
     # If differ, update /etc/fstab manually to match the new values
     sudo vim /etc/fstab
     
-    # Next, reinstall GRUB bootloader
+    # Reinstall GRUB bootloader
     sudo grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     
@@ -186,34 +209,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     
     # Verify EFI boot entries
     sudo efibootmgr
-
-    # Reboot and done!
-    sudo reboot
     ```
-34. Done! Now you can safely remove your backup drive.
-
----
-
-## 📋 Post-Restore Verification
-
-After reboot, confirm your system is healthy and consistent:
-
-- **Partition & UUID Check :** Confirm `sfdisk` aligned the partitions correctly and systemd mounted them via the expected UUIDs:
-    ```
-    # Confirm root and boot mountpoints are clean
-    findmnt -nt btrfs,vfat
-    
-    # View existing /etc/fstab
-    sudo cat /etc/fstab
-    
-    # Compare partition UUIDs with /etc/fstab
-    lsblk -f
-
-    # If differ, update /etc/fstab manually to match the new values
-    sudo vim /etc/fstab
-    ```
-
-    > This step is mandatory when restoring to any SSD other than the original, since UUIDs will not match automatically.
 
 - **Btrfs Filesystem Health & Scrub :** Verify partition capacity is fully recognized and run an active checksum scrub to catch block corruption:
     ```
@@ -233,15 +229,6 @@ After reboot, confirm your system is healthy and consistent:
     # Check for high-priority kernel or disk errors from current boot
     # This should not return any errors, but if it does, investigate it
     sudo journalctl -p 3 -b
-    ```
-- **EFI Boot Entries :** Ensure your motherboard firmware still recognizes the Arch Linux boot entry:
-    ```
-    # List UEFI boot entries
-    sudo efibootmgr
-
-    # If missing, reinstall it
-    sudo grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
     ```
 
 ---

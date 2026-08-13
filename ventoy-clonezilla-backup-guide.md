@@ -4,7 +4,17 @@
 
 This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of cloning the whole disk, we’re only backing up the EFI and Btrfs partitions — it’s faster, cleaner, and keeps your data organized. I use a 120GB Hikvision SSD in an ORICO enclosure, but any external drive works.
 
-> ⚠️ **Scope & Limitations:** This guide is strictly for full-system recovery on the same SSD (`/dev/nvme0n1`). Because we save and restore the exact partition geometry and file system UUIDs, you won’t need to mess with resizing or re-configuring bootloaders after a restore — you’ll be back exactly where you started. If you are migrating to a different disk, you'll need additional steps.
+The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and file names may vary:
+
+| Variable | Example Value | Description |
+| :--- | :--- | :--- |
+| **Internal Drive** | `/dev/nvme0n1` | Target NVMe node (`/dev/sda` for SATA). |
+| **Backup Drive** | `/dev/sdb1` | External USB partition (verify via `lsblk`). |
+| **Backup Name** | `backup-yyyy-mm-dd-short-description` | Follow this custom naming convention. |
+
+> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `sfdisk` or `grub-install`.
+
+---
 
 ## 💿 Prepare Backup Drive
 
@@ -76,13 +86,16 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 31. After everything is done, press `Enter`.
 32. When prompted, select **cmd** to drop into the shell.
 33. Backup your disk layout so it can be restored later:
+
+    > This dump file is required for restoring to any SSD, ensuring correct partition boundaries and alignment regardless of hardware.
+
     ```
     # Find your backup drive
     lsblk
     
     # Mount backup drive
     sudo mkdir -p /mnt/backup
-    sudo mount [backup_partition, "/dev/sdb1"] /mnt/backup
+    sudo mount /dev/sdb1 /mnt/backup
     
     # Dump partition table
     sudo sfdisk -d /dev/nvme0n1 > dump.sfdisk
@@ -105,8 +118,6 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 
 ## 🔄 Restore from Backup
 
-> **Scope:** This guide is designed for restoring to the same physical SSD (including wiped or corrupted partitions).
-
 1. Turn off **Secure Boot** before proceeding.
 2. Insert backup drive into the laptop and power it on.
 3. Enter Boot Menu, then boot from backup drive.
@@ -116,13 +127,16 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 7. Select your preferred language and keyboard layout.
 8. Select **Enter_shell** to enter the command line.
 9. Before running the Clonezilla wizard, restore your exact partition boundaries:
+
+    > Restoring the partition table ensures identical boundaries on any SSD. Without this, UUIDs and alignment may mismatch.
+
     ```
     # Find your backup drive
     lsblk
     
     # Mount backup drive to a neutral location
     sudo mkdir -p /mnt/backup
-    sudo mount [backup_partition, "/dev/sdb1"] /mnt/backup
+    sudo mount /dev/sdb1 /mnt/backup
     
     # Free target locks
     sudo swapoff -a 2>/dev/null
@@ -163,50 +177,59 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 29. Clonezilla will ask you again, confirm by typing `y` then `Enter`.
 30. Wait for Clonezilla to complete the restoration.
 31. After everything is done, press `Enter`.
-32. When prompted, select **reboot** to restart your device.
+32. When prompted, select **Reboot**.
 33. Done! Now you can safely remove your backup drive.
 
 ---
 
 ## 📋 Post-Restore Verification
 
-Once you reboot and log back into your system, run these quick checks to ensure your filesystem, mounts, and hardware state are 100% healthy:
+> Note: Run these commands after booting into your restored Arch system. If restoring to a brand-new SSD and the system fails to boot, boot from your Arch ISO and `arch-chroot` into your system to run these commands.
 
-- **Verify Partition Boundaries & UUIDs**  
-    Confirm `sfdisk` aligned the partitions correctly and systemd mounted them via the expected UUIDs:
+After reboot, confirm your system is healthy and consistent:
+
+- **System Reconfiguration & UUID Verification :** Confirm mount points, update `/etc/fstab` if hardware changed, and refresh boot binaries:
     ```
-    # Verify partition UUIDs match /etc/fstab
-    lsblk -f
-    
     # Confirm root and boot mountpoints are clean
     findmnt -nt btrfs,vfat
+    
+    # Compare partition UUIDs with /etc/fstab
+    lsblk -f
+    sudo cat /etc/fstab
+
+    # If differ, update /etc/fstab manually to match the new values
+    sudo vim /etc/fstab
+    
+    # Reinstall GRUB bootloader
+    sudo grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    
+    # Regenerate initramfs
+    sudo mkinitcpio -P
+    
+    # Verify EFI boot entries
+    sudo efibootmgr
     ```
-- **Check Btrfs Filesystem Health & Run Scrub**  
-    Verify partition capacity is fully recognized and run an active checksum scrub to catch block corruption:
+
+- **Btrfs Filesystem Health & Scrub :** Verify partition capacity is fully recognized and run an active checksum scrub to catch block corruption:
     ```
     # Check mounted subvolume capacity and metadata allocation
     sudo btrfs filesystem usage /
     
-    # Run an immediate integrity scrub (reads all blocks against metadata hashes)
+    # Run an immediate integrity scrub
     sudo btrfs scrub start -B /
     
-    # Check hardware/driver I/O error stats
+    # Check error stats, expected all counters returns 0
+    # If not, run `sudo btrfs device stats -z /` to reset it
     sudo btrfs device stats /
     ```
-    _(All counters in device stats should be 0. If any are non-zero, log them and reset with `sudo btrfs device stats -z /`)._
-- **Check System Logs for Storage & Driver Errors**  
-    Scan the journal from the current boot to ensure no NVMe driver, Btrfs metadata, or partition mount warnings occurred:
+
+- **System Logs :** Scan the journal from the current boot to ensure no NVMe driver, Btrfs metadata, or partition mount warnings occurred:
     ```
     # Check for high-priority kernel or disk errors from current boot
-    journalctl -p 3 -b
+    # This should not return any errors, but if it does, investigate it
+    sudo journalctl -p 3 -b
     ```
-- **Verify EFI Boot Entries**  
-    Ensure your motherboard firmware still recognizes the Arch Linux boot entry:
-    ```
-    # List UEFI boot entries
-    efibootmgr
-    ```
-    _(If the output is empty or missing `Arch Linux`, you will need to re-install the bootloader using `grub-install` or `bootctl install` from a live USB)._
 
 ---
 
@@ -214,8 +237,10 @@ Once you reboot and log back into your system, run these quick checks to ensure 
 
 Keep your backup USB reliable, keep backup sizes minimal, and manage your image lifecycle over time.
 
-1. **Pre-Backup OS & Btrfs Cleanup**
-    Since Clonezilla copies all used filesystem blocks, clean up unnecessary data on Arch before booting into Clonezilla to keep image sizes small (~3–8 GB):
+1. **Pre-Backup OS & Btrfs Cleanup :** Since Clonezilla copies all used filesystem blocks, clean up unnecessary data on Arch before booting into Clonezilla to keep image sizes small:
+
+    > Always run these steps before creating a new backup, whether restoring to the original SSD or migrating to any other SSD.
+
     ```
     # Keep only the current version of installed packages in pacman cache
     sudo paccache -r
@@ -236,11 +261,13 @@ Keep your backup USB reliable, keep backup sizes minimal, and manage your image 
     # Trim NVMe blocks to maintain drive performance
     sudo fstrim -v /
     ```
-2. **Image Retention & Storage Management**
-    With a 120GB Hikvision SSD and compressed image sets averaging ~5 GB, your drive can easily store 10–15 historical backups alongside your ISOs. When cleaning up space, always delete both the backup folder and its paired partition dump file.
+
+2. **Image Retention & Storage Management :** When cleaning up space, always delete both the backup folder and its paired partition dump file — the dump file is critical for restoring correct partition alignment on any SSD, not just the original one.
+
 3. **Ventoy & ISO Lifecycle**
-    - Upgrade Ventoy using `Ventoy2Disk` (or the Linux script) with the Update option (`-u`) — this updates the bootloader on your external drive without touching your ISOs or backup images.
-    - Update your `archlinux-YYYY.MM.DD-x86_64.iso` every few months so you have a modern kernel and up-to-date Btrfs/GRUB tools if you ever need to `chroot` or repair boot entries via `efibootmgr`.
+    - Upgrade **Ventoy** using `Ventoy2Disk` (or the Linux script) with the Update option (`-u`) — this updates the bootloader on your external drive without touching your ISOs or backup images.
+    - Update your **Arch Linux ISO** every few months so you have a modern kernel and up‑to‑date Btrfs/GRUB tools if you ever need to `chroot` or repair boot entries via `efibootmgr`.
+    - Keep your **Clonezilla ISO** updated as well, since newer builds improve compatibility with NVMe and EFI systems.
 
 ---
 

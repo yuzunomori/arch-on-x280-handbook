@@ -6,9 +6,11 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 
 The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and file names may vary:
 
-| Variable | Example Value | Description |
+| Variable | Example / Placeholder | Description |
 | :--- | :--- | :--- |
-| **Internal Drive** | `/dev/nvme0n1` | Target NVMe node (`/dev/sda` for SATA). |
+| **Internal Drive** | `/dev/nvme0n1` | Target disk (e.g., `/dev/sda` for SATA). |
+| **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
+| **Root Partition** | `/dev/nvme0n1p2` | Btrfs filesystem partition. |
 | **Backup Drive** | `/dev/sdb1` | External USB partition (verify via `lsblk`). |
 | **Backup Name** | `backup-yyyy-mm-dd-short-description` | Follow this custom naming convention. |
 
@@ -18,20 +20,11 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 
 ## 💿 Prepare Backup Drive
 
-1. Download **Ventoy** for Windows:
-    ```
-    https://www.ventoy.net/en/download.html
-    ```
+1. Download **Ventoy** for Windows from the [official Ventoy website](https://www.ventoy.net/en/download.html).
 2. Plug in your backup drive.
 3. Run **Ventoy2Disk.exe** to flash Ventoy onto the drive.
-4. Download **Clonezilla Live** ISO file (AMD64):
-    ```
-    https://clonezilla.org/downloads/download.php?branch=stable
-    ```
-5. Download latest **Arch Linux** ISO file:
-    ```
-    https://archlinux.org/download/
-    ```
+4. Download **Clonezilla Live** ISO file (AMD64) from the [official Clonezilla website](https://clonezilla.org/downloads/download.php?branch=stable).
+5. Download latest **Arch Linux** ISO file from the [official Arch Linux website](https://archlinux.org/download/).
 6. Move ISO files into an `ISOs/` folder on the backup drive.
     ```
     📁 Ventoy Drive Root/
@@ -93,21 +86,11 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Find your backup drive
     lsblk
     
-    # Mount backup drive
-    sudo mkdir -p /mnt/backup
-    sudo mount /dev/sdb1 /mnt/backup
-    
-    # Dump partition table
-    sudo sfdisk -d /dev/nvme0n1 > dump.sfdisk
-    
-    # Copy partition table dump file to backup drive
-    sudo cp dump.sfdisk /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+    # Dump partition table directly to the already-mounted backup drive
+    sudo sfdisk -d /dev/nvme0n1 > /home/partimag/backup-yyyy-mm-dd-short-description.sfdisk
     
     # Flush buffers
     sync
-    
-    # Safely unmount
-    sudo umount /mnt/backup
     
     # Reboot manually
     sudo reboot
@@ -141,6 +124,9 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Free target locks
     sudo swapoff -a 2>/dev/null
     sudo umount /dev/nvme0n1p* 2>/dev/null
+
+    # Print the table to be restored so you can visually confirm it is the correct one
+    cat /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
 
     # Restore partition table
     sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk

@@ -252,13 +252,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ip addr show
     ping archlinux.org -c 1
     ```
-3. Enable `TRIM` to turn on automatic SSD maintenance:
-    ```
-    sudo systemctl enable --now fstrim.timer
-    sudo systemctl status fstrim.timer
-    sudo systemctl list-timers fstrim.timer
-    ```
-4. System verification:
+3. System verification:
     ```
     # Boot verification
     sudo systemctl --failed
@@ -279,11 +273,11 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Check service
     sudo systemctl list-unit-files --state=enabled
     ```
-5. Update the system:
+4. Update the system:
     ```
     sudo pacman -Syu
     ```
-6. Backup current package list:
+5. Backup current package list:
     ```
     # Create directory
     mkdir -p ~/arch
@@ -292,7 +286,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     pacman -Qe > ~/arch/arch-pkglist.txt
     pacman -Qqm > ~/arch/arch-aurlist.txt
     ```
-7. Final reboot:
+6. Final reboot:
     ```
     reboot
     ```

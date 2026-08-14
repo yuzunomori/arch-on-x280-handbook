@@ -112,11 +112,10 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Temporary mount
     mount /dev/nvme0n1p2 /mnt
 
-    # Create subvolumes
+    # Create root subvolume
     btrfs subvolume create /mnt/@
-    btrfs subvolume create /mnt/@home
 
-    # Recheck created subvolumes
+    # Recheck created subvolume
     btrfs subvolume list /mnt
 
     # Unmount
@@ -126,10 +125,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     mount -o noatime,compress=zstd,ssd,discard=async,subvol=@ /dev/nvme0n1p2 /mnt
 
     # Create mount points for home
-    mkdir -p /mnt/{boot,home}
-
-    # Mount home subvolume
-    mount -o noatime,compress=zstd,ssd,discard=async,subvol=@home /dev/nvme0n1p2 /mnt/home
+    mkdir -p /mnt/boot
 
     # Mount EFI
     mount /dev/nvme0n1p1 /mnt/boot
@@ -259,7 +255,6 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     
     # Verify Btrfs volumes
     findmnt /
-    findmnt /home
     
     # Verify subvolumes
     sudo btrfs subvolume list /

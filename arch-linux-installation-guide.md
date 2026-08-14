@@ -6,14 +6,19 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
 
 The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and variables may vary:
 
-| Variable | Example Value | Description |
+| Variable | Example / Placeholder | Description |
 | :--- | :--- | :--- |
-| **Internal Drive** | `/dev/nvme0n1` | Target NVMe node (`/dev/sda` for SATA). |
+| **Internal Drive** | `/dev/nvme0n1` | Target disk (e.g., `/dev/sda` for SATA). |
 | **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
-| **Root Partition** | `/dev/nvme0n1p2` | Remaining space formatted as Btrfs. |
-| **Hostname** | `x280` | System network identification name. |
-| **Username** | `your-name-here` | Default sudo user account name. |
-| **Country Code** | `TH` | Two-letter ISO country code for mirror ranking. |
+| **Root Partition** | `/dev/nvme0n1p2` | Btrfs filesystem partition. |
+| **Wireless Interface** | `wlan0` | Network device identifier (`ip link` or `iwctl`). |
+| **Wi-Fi SSID** | `<WIFI_SSID>` | Your target Wi-Fi network name. |
+| **Wi-Fi Password** | `<WIFI_PASS>` | Your target Wi-Fi network password. |
+| **Country Code** | `<COUNTRY_CODE>` | Two-letter ISO country code for mirror ranking (e.g., `TH`). |
+| **Time Zone** | `<TIME_ZONE>` | Zoneinfo path (e.g., `Asia/Bangkok`). |
+| **Locale** | `<LOCALE>` | System primary language and encoding (e.g., `en_US.UTF-8`). |
+| **Hostname** | `<HOSTNAME>` | System network identification name (e.g., `x280`). |
+| **Username** | `<USERNAME>` | Your main sudo user account name. |
 
 > **Note:** Always verify device nodes via `lsblk` before running destructive commands like `wipefs` or `mkfs`.
 
@@ -21,10 +26,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 
 ## 💿 Prepare ISO Image
 
-1. Download latest image file:
-    ```
-    https://archlinux.org/download/
-    ```
+1. Download the latest ISO image file from the [official Arch Linux website](https://archlinux.org/download/).
 2. Flash image file to USB flash drive.
 3. Turn off **Secure Boot** for easy setup.
 4. Insert USB flash drive into the laptop and power it on.
@@ -44,7 +46,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     iwctl
     station wlan0 scan
     station wlan0 get-networks
-    station wlan0 connect "your_wifi_name"
+    station wlan0 connect "<WIFI_SSID>"
     exit
     ```
 3. Verify internet connection:
@@ -55,7 +57,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Check internet access
     ping archlinux.org -c 1
     ```
-4. Set temporary root password:
+4. Set a temporary installer root password:
     ```
     passwd
     ```
@@ -87,12 +89,12 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     Size: (allocate the rest)
     Type: Linux filesystem
     ```
-5. Apply write partition table.
+5. Write the partition table to disk and exit cfdisk.
 6. Verify partitions:
     ```
     fdisk -l
     ```
-7. Clean up signature of each partition:
+7. Wipe filesystem signatures on each partition:
     ```
     wipefs -a /dev/nvme0n1p1
     wipefs -a /dev/nvme0n1p2
@@ -143,7 +145,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 1. Update mirror list (Adjust the country code to your location):
     ```
     # Scan for mirror list
-    reflector --latest 5 --country TH --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+    reflector --latest 5 --country <COUNTRY_CODE> --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
     # Verify mirrorlist file
     cat /etc/pacman.d/mirrorlist
@@ -165,13 +167,13 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 
 ## ⚙️ System Configuration
 
-1. Change root to laptop:
+1. Change root into the newly installed system:
     ```
     arch-chroot /mnt
     ```
 2. Set laptop timezone:
     ```
-    ln -sf /usr/share/zoneinfo/Asia/Bangkok /etc/localtime
+    ln -sf /usr/share/zoneinfo/<TIME_ZONE> /etc/localtime
     hwclock --systohc
     ```
 3. Configure locale by uncommenting at least one locale you plan to use (e.g. `en_US.UTF-8 UTF-8`):
@@ -181,12 +183,13 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 4. Create locale config file and verify it:
     ```
-    echo "LANG=en_US.UTF-8" > /etc/locale.conf
+    echo "LANG=<LOCALE>" > /etc/locale.conf
     cat /etc/locale.conf
     ```
 5. Set hostname and verify:
     ```
-    echo "x280" > /etc/hostname
+    echo "<HOSTNAME>" > /etc/hostname
+    cat /etc/hostname
     ```
 6. Enable networking:
     ```
@@ -198,8 +201,8 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 8. Add new user and set the password:
     ```
-    useradd -m -G wheel your-name-here
-    passwd your-name-here
+    useradd -m -G wheel <USERNAME>
+    passwd <USERNAME>
     ```
 9. Make members of group wheel execute any command by uncommenting **%wheel ALL=(ALL:ALL) ALL**:
     ```
@@ -225,7 +228,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     grub-mkconfig -o /boot/grub/grub.cfg
     efibootmgr -v
     ```
-14. Finalize:
+14. Exit chroot, unmount partitions, and reboot:
     ```
     exit
     umount -R /mnt
@@ -243,7 +246,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Connect
     nmcli device
     nmcli device wifi list
-    nmcli device wifi connect "your_wifi_name" password "your_wifi_password"
+    mcli device wifi connect "<WIFI_SSID>" password "<WIFI_PASS>"
     
     # Verify
     ip addr show
@@ -280,7 +283,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
     sudo pacman -Syu
     ```
-6. Save package list:
+6. Backup current package list:
     ```
     # Create directory
     mkdir -p ~/arch

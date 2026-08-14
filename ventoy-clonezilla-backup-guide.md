@@ -125,6 +125,9 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     sudo swapoff -a 2>/dev/null
     sudo umount /dev/nvme0n1p* 2>/dev/null
 
+    # Print the table to be restored so you can visually confirm it is the correct one
+    cat /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+
     # Restore partition table
     sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
 

@@ -86,21 +86,11 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Find your backup drive
     lsblk
     
-    # Mount backup drive
-    sudo mkdir -p /mnt/backup
-    sudo mount /dev/sdb1 /mnt/backup
-    
-    # Dump partition table
-    sudo sfdisk -d /dev/nvme0n1 > dump.sfdisk
-    
-    # Copy partition table dump file to backup drive
-    sudo cp dump.sfdisk /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+    # Dump partition table directly to the already-mounted backup drive
+    sudo sfdisk -d /dev/nvme0n1 > /home/partimag/backup-yyyy-mm-dd-short-description.sfdisk
     
     # Flush buffers
     sync
-    
-    # Safely unmount
-    sudo umount /mnt/backup
     
     # Reboot manually
     sudo reboot

@@ -246,7 +246,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Connect
     nmcli device
     nmcli device wifi list
-    mcli device wifi connect "<WIFI_SSID>" password "<WIFI_PASS>"
+    nmcli device wifi connect "<WIFI_SSID>" password "<WIFI_PASS>"
     
     # Verify
     ip addr show

@@ -4,24 +4,6 @@
 
 This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 256GB NVMe SSD, UEFI) with x86_64 architecture, Btrfs filesystem, GRUB bootloader, Intel microcode, Secure Boot turned off, and no swap configured.
 
-The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and variables may vary:
-
-| Variable | Example / Placeholder | Description |
-| :--- | :--- | :--- |
-| **Internal Drive** | `/dev/nvme0n1` | Target disk (e.g., `/dev/sda` for SATA). |
-| **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
-| **Root Partition** | `/dev/nvme0n1p2` | Btrfs filesystem partition. |
-| **Wireless Interface** | `wlan0` | Network device identifier (`ip link` or `iwctl`). |
-| **Wi-Fi SSID** | `<WIFI_SSID>` | Your target Wi-Fi network name. |
-| **Wi-Fi Password** | `<WIFI_PASS>` | Your target Wi-Fi network password. |
-| **Country Code** | `<COUNTRY_CODE>` | Two-letter ISO country code for mirror ranking (e.g., `TH`). |
-| **Time Zone** | `<TIME_ZONE>` | Zoneinfo path (e.g., `Asia/Bangkok`). |
-| **Locale** | `<LOCALE>` | System primary language and encoding (e.g., `en_US.UTF-8`). |
-| **Hostname** | `<HOSTNAME>` | System network identification name (e.g., `x280`). |
-| **Username** | `<USERNAME>` | Your main sudo user account name. |
-
-> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `wipefs` or `mkfs`.
-
 ---
 
 ## 💿 Prepare ISO Image
@@ -43,10 +25,18 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 2. Connect to Wi-Fi:
     ```
+    # Launch wireless control
     iwctl
+
+    # List available devices and note your device name (e.g., `wlan0`)
+    device list
+
+    # Scan, show available networks, and connect to Wi-Fi
     station wlan0 scan
     station wlan0 get-networks
     station wlan0 connect "<WIFI_SSID>"
+
+    # Exit wireless control
     exit
     ```
 3. Verify internet connection:
@@ -63,7 +53,11 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 5. Check system clock is synchronized:
     ```
+    # System clock synchronized should return "yes"
     timedatectl status
+
+    # If not, run:
+    timedatectl set-ntp true
     ```
 
 ---
@@ -72,7 +66,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 
 1. Manage disk partitions:
     ```
-    # List all disks
+    # List all disks and note your disk name (e.g., `/dev/nvme0n1`)
     fdisk -l
 
     # Modify target disk partition:
@@ -89,8 +83,8 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     Size: (allocate the rest)
     Type: Linux filesystem
     ```
-5. Write the partition table to disk and exit cfdisk.
-6. Verify partitions:
+5. Write the partition table to disk and exit `cfdisk`.
+6. Verify and note each partition name (e.g `/dev/nvme0n1p1` and `/dev/nvme0n1p2`):
     ```
     fdisk -l
     ```
@@ -124,13 +118,13 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Mount root subvolume
     mount -o noatime,compress=zstd,ssd,discard=async,subvol=@ /dev/nvme0n1p2 /mnt
 
-    # Create mount points for home
+    # Create boot mount point
     mkdir -p /mnt/boot
 
-    # Mount EFI
+    # Mount boot partition
     mount /dev/nvme0n1p1 /mnt/boot
 
-    # Verify
+    # Verify partitions
     mount | grep boot
     mount | grep btrfs
     ```
@@ -139,10 +133,10 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 
 ## 📦 Install Base System
 
-1. Update mirror list (Adjust the country code to your location):
+1. Update mirror list:
     ```
-    # Scan for mirror list
-    reflector --latest 5 --country <COUNTRY_CODE> --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+    # Scan for mirror list (adjust country codes as needed)
+    reflector --latest 10 --country TH,SG --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
     # Verify mirrorlist file
     cat /etc/pacman.d/mirrorlist
@@ -170,7 +164,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 2. Set laptop timezone:
     ```
-    ln -sf /usr/share/zoneinfo/<TIME_ZONE> /etc/localtime
+    ln -sf /usr/share/zoneinfo/Asia/Bangkok /etc/localtime
     hwclock --systohc
     ```
 3. Configure locale by uncommenting at least one locale you plan to use (e.g. `en_US.UTF-8 UTF-8`):
@@ -180,12 +174,12 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 4. Create locale config file and verify it:
     ```
-    echo "LANG=<LOCALE>" > /etc/locale.conf
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
     cat /etc/locale.conf
     ```
 5. Set hostname and verify:
     ```
-    echo "<HOSTNAME>" > /etc/hostname
+    echo "x280" > /etc/hostname
     cat /etc/hostname
     ```
 6. Enable networking:
@@ -198,32 +192,31 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 8. Add new user and set the password:
     ```
-    useradd -m -G wheel <USERNAME>
-    passwd <USERNAME>
+    useradd -m -G wheel your-username-here
+    passwd your-username-here
     ```
-9. Make members of group wheel execute any command by uncommenting **%wheel ALL=(ALL:ALL) ALL**:
+9. Make members of group wheel execute any command:
     ```
+    # Uncomment on %wheel ALL=(ALL:ALL) ALL
     visudo
     ```
 10. Install bootloader and utilities:
     ```
-    pacman -S grub efibootmgr git reflector pacman-contrib sof-firmware pipewire pipewire-pulse pipewire-alsa wireplumber tlp tlp-rdw acpid brightnessctl smartmontools bluez bluez-utils
+    pacman -S grub efibootmgr git reflector pacman-contrib sof-firmware pipewire pipewire-pulse pipewire-alsa wireplumber tlp tlp-rdw acpid brightnessctl smartmontools
     ```
 11. Enable battery and power event services:
     ```
     systemctl enable tlp
     systemctl enable acpid
-    systemctl enable bluetooth
     ```
 12. Ensure early microcode loading is applied:
     ```
     mkinitcpio -P
     ```
-13. Setup bootloader and verify:
+13. Setup bootloader:
     ```
     grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
-    efibootmgr -v
     ```
 14. Exit chroot, unmount partitions, and reboot:
     ```
@@ -240,16 +233,32 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 1. Login to the system.
 2. Connect to Wi-Fi:
     ```
-    # Connect
+    # You can skip these view-only commands...
     nmcli device
     nmcli device wifi list
+
+    # Connect to Wi‑Fi
     nmcli device wifi connect "<WIFI_SSID>" password "<WIFI_PASS>"
     
-    # Verify
+    # Verify connection
     ip addr show
     ping archlinux.org -c 1
     ```
-3. System verification:
+3. Enable network time synchronization:
+    ```
+    # Activate systemd-timesyncd for network time
+    sudo timedatectl set-ntp true
+
+    # Verify synchronization state
+    timedatectl status
+
+    # Show detailed timesync information
+    timedatectl timesync-status
+
+    # Check time sync service status
+    systemctl status systemd-timesyncd --no-pager
+    ```
+4. System verification:
     ```
     # Boot verification
     sudo systemctl --failed
@@ -260,20 +269,21 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Verify subvolumes
     sudo btrfs subvolume list /
 
-    # Verify journal logs for errors
-    sudo journalctl -p 3 -xb
-
     # Check disk usage before moving on
     df -h
 
-    # Check service
+    # Check enabled services
     sudo systemctl list-unit-files --state=enabled
+
+    # Check system logs for error entries (optional)
+    # Note: It's normal to see some error lines here.
+    sudo journalctl -p 3 -xb
     ```
-4. Update the system:
+5. Update the system:
     ```
     sudo pacman -Syu
     ```
-5. Backup current package list:
+6. Backup current package list:
     ```
     # Create directory
     mkdir -p ~/arch
@@ -282,7 +292,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     pacman -Qe > ~/arch/arch-pkglist.txt
     pacman -Qqm > ~/arch/arch-aurlist.txt
     ```
-6. Final reboot:
+7. Final reboot:
     ```
     reboot
     ```

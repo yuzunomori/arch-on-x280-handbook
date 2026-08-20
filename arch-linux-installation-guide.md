@@ -4,24 +4,6 @@
 
 This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 256GB NVMe SSD, UEFI) with x86_64 architecture, Btrfs filesystem, GRUB bootloader, Intel microcode, Secure Boot turned off, and no swap configured.
 
-The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and variables may vary:
-
-| Variable | Example / Placeholder | Description |
-| :--- | :--- | :--- |
-| **Internal Drive** | `/dev/nvme0n1` | Target disk (e.g., `/dev/sda` for SATA). |
-| **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
-| **Root Partition** | `/dev/nvme0n1p2` | Btrfs filesystem partition. |
-| **Wireless Interface** | `wlan0` | Network device identifier (`ip link` or `iwctl`). |
-| **Wi-Fi SSID** | `<WIFI_SSID>` | Your target Wi-Fi network name. |
-| **Wi-Fi Password** | `<WIFI_PASS>` | Your target Wi-Fi network password. |
-| **Country Code** | `<COUNTRY_CODE>` | Two-letter ISO country code for mirror ranking (e.g., `TH`). |
-| **Time Zone** | `<TIME_ZONE>` | Zoneinfo path (e.g., `Asia/Bangkok`). |
-| **Locale** | `<LOCALE>` | System primary language and encoding (e.g., `en_US.UTF-8`). |
-| **Hostname** | `<HOSTNAME>` | System network identification name (e.g., `x280`). |
-| **Username** | `<USERNAME>` | Your main sudo user account name. |
-
-> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `wipefs` or `mkfs`.
-
 ---
 
 ## 💿 Prepare ISO Image
@@ -72,7 +54,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 
 1. Manage disk partitions:
     ```
-    # List all disks
+    # List all disks and note your disk name (e.g., `/dev/nvme0n1`)
     fdisk -l
 
     # Modify target disk partition:
@@ -89,8 +71,8 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     Size: (allocate the rest)
     Type: Linux filesystem
     ```
-5. Write the partition table to disk and exit cfdisk.
-6. Verify partitions:
+5. Write the partition table to disk and exit `cfdisk`.
+6. Verify and note each partition name (e.g `/dev/nvme0n1p1` and `/dev/nvme0n1p2`):
     ```
     fdisk -l
     ```
@@ -124,13 +106,13 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Mount root subvolume
     mount -o noatime,compress=zstd,ssd,discard=async,subvol=@ /dev/nvme0n1p2 /mnt
 
-    # Create mount points for home
+    # Create boot mount point
     mkdir -p /mnt/boot
 
-    # Mount EFI
+    # Mount boot partition
     mount /dev/nvme0n1p1 /mnt/boot
 
-    # Verify
+    # Verify partitions
     mount | grep boot
     mount | grep btrfs
     ```

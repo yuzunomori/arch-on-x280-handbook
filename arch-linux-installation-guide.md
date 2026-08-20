@@ -148,7 +148,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     ```
 2. Install essential packages:
     ```
-    pacstrap -K /mnt base linux linux-firmware networkmanager wpa_supplicant vim base-devel intel-ucode btrfs-progs mesa vulkan-intel intel-media-driver
+    pacstrap -K /mnt base linux linux-firmware networkmanager vim base-devel intel-ucode btrfs-progs mesa vulkan-intel intel-media-driver
     ```
 3. Generate `fstab` and verify:
     ```

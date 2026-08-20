@@ -135,8 +135,8 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
 
 1. Update mirror list:
     ```
-    # Scan for mirror list
-    reflector --latest 5 --country TH --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+    # Scan for mirror list (adjust country codes as needed)
+    reflector --latest 10 --country TH,SG --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
     # Verify mirrorlist file
     cat /etc/pacman.d/mirrorlist

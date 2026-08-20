@@ -131,6 +131,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     mount /dev/nvme0n1p1 /mnt/boot
 
     # Verify
+    mount | grep boot
     mount | grep btrfs
     ```
 

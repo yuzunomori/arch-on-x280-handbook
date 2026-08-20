@@ -25,10 +25,18 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 2. Connect to Wi-Fi:
     ```
+    # Launch wireless control
     iwctl
+
+    # List available devices and note your device name (e.g., `wlan0`)
+    device list
+
+    # Scan, show available networks, and connect to Wi-Fi
     station wlan0 scan
     station wlan0 get-networks
     station wlan0 connect "<WIFI_SSID>"
+
+    # Exit wireless control
     exit
     ```
 3. Verify internet connection:

@@ -192,8 +192,8 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 8. Add new user and set the password:
     ```
-    useradd -m -G wheel <USERNAME>
-    passwd <USERNAME>
+    useradd -m -G wheel your-username-here
+    passwd your-username-here
     ```
 9. Make members of group wheel execute any command:
     ```

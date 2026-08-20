@@ -121,10 +121,10 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
 
 ## 📦 Install Base System
 
-1. Update mirror list (Adjust the country code to your location):
+1. Update mirror list:
     ```
     # Scan for mirror list
-    reflector --latest 5 --country <COUNTRY_CODE> --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+    reflector --latest 5 --country TH --protocol https --sort rate --save /etc/pacman.d/mirrorlist
 
     # Verify mirrorlist file
     cat /etc/pacman.d/mirrorlist
@@ -152,7 +152,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 2. Set laptop timezone:
     ```
-    ln -sf /usr/share/zoneinfo/<TIME_ZONE> /etc/localtime
+    ln -sf /usr/share/zoneinfo/Asia/Bangkok /etc/localtime
     hwclock --systohc
     ```
 3. Configure locale by uncommenting at least one locale you plan to use (e.g. `en_US.UTF-8 UTF-8`):
@@ -162,12 +162,12 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 4. Create locale config file and verify it:
     ```
-    echo "LANG=<LOCALE>" > /etc/locale.conf
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
     cat /etc/locale.conf
     ```
 5. Set hostname and verify:
     ```
-    echo "<HOSTNAME>" > /etc/hostname
+    echo "x280" > /etc/hostname
     cat /etc/hostname
     ```
 6. Enable networking:
@@ -183,29 +183,28 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     useradd -m -G wheel <USERNAME>
     passwd <USERNAME>
     ```
-9. Make members of group wheel execute any command by uncommenting **%wheel ALL=(ALL:ALL) ALL**:
+9. Make members of group wheel execute any command:
     ```
+    # Uncomment on %wheel ALL=(ALL:ALL) ALL
     visudo
     ```
 10. Install bootloader and utilities:
     ```
-    pacman -S grub efibootmgr git reflector pacman-contrib sof-firmware pipewire pipewire-pulse pipewire-alsa wireplumber tlp tlp-rdw acpid brightnessctl smartmontools bluez bluez-utils
+    pacman -S grub efibootmgr git reflector pacman-contrib sof-firmware pipewire pipewire-pulse pipewire-alsa wireplumber tlp tlp-rdw acpid brightnessctl smartmontools
     ```
 11. Enable battery and power event services:
     ```
     systemctl enable tlp
     systemctl enable acpid
-    systemctl enable bluetooth
     ```
 12. Ensure early microcode loading is applied:
     ```
     mkinitcpio -P
     ```
-13. Setup bootloader and verify:
+13. Setup bootloader:
     ```
     grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
-    efibootmgr -v
     ```
 14. Exit chroot, unmount partitions, and reboot:
     ```

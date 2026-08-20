@@ -53,7 +53,11 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ```
 5. Check system clock is synchronized:
     ```
+    # System clock synchronized should return "yes"
     timedatectl status
+
+    # If not, run:
+    timedatectl set-ntp true
     ```
 
 ---
@@ -240,7 +244,21 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     ip addr show
     ping archlinux.org -c 1
     ```
-3. System verification:
+3. Enable network time synchronization:
+    ```
+    # Activate systemd-timesyncd for network time
+    sudo timedatectl set-ntp true
+
+    # Verify synchronization state
+    timedatectl status
+
+    # Show detailed timesync information
+    timedatectl timesync-status
+
+    # Check time sync service status
+    systemctl status systemd-timesyncd --no-pager
+    ```
+4. System verification:
     ```
     # Boot verification
     sudo systemctl --failed
@@ -261,11 +279,11 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     # Note: It's normal to see some error lines here.
     sudo journalctl -p 3 -xb
     ```
-4. Update the system:
+5. Update the system:
     ```
     sudo pacman -Syu
     ```
-5. Backup current package list:
+6. Backup current package list:
     ```
     # Create directory
     mkdir -p ~/arch
@@ -274,7 +292,7 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     pacman -Qe > ~/arch/arch-pkglist.txt
     pacman -Qqm > ~/arch/arch-aurlist.txt
     ```
-6. Final reboot:
+7. Final reboot:
     ```
     reboot
     ```

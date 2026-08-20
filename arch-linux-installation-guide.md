@@ -221,12 +221,14 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
 1. Login to the system.
 2. Connect to Wi-Fi:
     ```
-    # Connect
+    # You can skip these view-only commands...
     nmcli device
     nmcli device wifi list
+
+    # Connect to Wi‑Fi
     nmcli device wifi connect "<WIFI_SSID>" password "<WIFI_PASS>"
     
-    # Verify
+    # Verify connection
     ip addr show
     ping archlinux.org -c 1
     ```
@@ -241,14 +243,15 @@ This guide runs on a **Lenovo ThinkPad X280** (Intel Core i5‑8350U, 8GB RAM, 2
     # Verify subvolumes
     sudo btrfs subvolume list /
 
-    # Verify journal logs for errors
-    sudo journalctl -p 3 -xb
-
     # Check disk usage before moving on
     df -h
 
-    # Check service
+    # Check enabled services
     sudo systemctl list-unit-files --state=enabled
+
+    # Check system logs for error entries (optional)
+    # Note: It's normal to see some error lines here.
+    sudo journalctl -p 3 -xb
     ```
 4. Update the system:
     ```

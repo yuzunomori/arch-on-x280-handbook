@@ -13,20 +13,12 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 3. Run **Ventoy2Disk.exe** to flash Ventoy onto the drive.
 4. Download **Clonezilla Live** ISO file (AMD64) from the [official Clonezilla website](https://clonezilla.org/downloads/download.php?branch=stable).
 5. Download latest **Arch Linux** ISO file from the [official Arch Linux website](https://archlinux.org/download/).
-6. Move ISO files into an `ISOs/` folder on the backup drive.
+6. Move ISO files into an `ISOs/` folder on the backup drive:
     ```
     📁 Ventoy Drive Root/
     └── 📁 ISOs/
         ├── clonezilla-live-3.3.3-15-amd64.iso
         └── archlinux-2026.08.01-x86_64.iso
-    
-    # After creating the backup image and saving the partition dump, the drive will look like this:
-    📁 Ventoy Drive Root/
-    ├── 📁 ISOs/                                        # Contains your bootable ISO files
-    │   ├── clonezilla-live-3.3.3-15-amd64.iso
-    │   └── archlinux-2026.08.01-x86_64.iso
-    ├── 📁 yyyy-mm-dd-short-description/                # Renamed from Clonezilla’s auto folder
-    └── 📄 yyyy-mm-dd-short-description.sfdisk          # Partition dump file, aligned to same convention
     ```
 7. Safely eject and remove the Ventoy backup drive.
 

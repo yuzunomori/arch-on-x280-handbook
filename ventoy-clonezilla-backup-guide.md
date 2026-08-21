@@ -117,8 +117,10 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     # Flush buffers
     sync
     
-    # Clean up and return to the wizard
+    # Clean up
     sudo umount /mnt/backup
+
+    # Exit the shell, you will return to Clonezilla
     exit
     ```
 10. Select **Start Clonezilla**.

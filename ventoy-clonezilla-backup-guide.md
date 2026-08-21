@@ -4,18 +4,6 @@
 
 This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of cloning the whole disk, we’re only backing up the EFI and Btrfs partitions — it’s faster, cleaner, and keeps your data organized. I use a 120GB Hikvision SSD in an ORICO enclosure, but any external drive works.
 
-The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and file names may vary:
-
-| Variable | Example / Placeholder | Description |
-| :--- | :--- | :--- |
-| **Internal Drive** | `/dev/nvme0n1` | Target disk (e.g., `/dev/sda` for SATA). |
-| **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
-| **Root Partition** | `/dev/nvme0n1p2` | Btrfs filesystem partition. |
-| **Backup Drive** | `/dev/sdb1` | External USB partition (verify via `lsblk`). |
-| **Backup Name** | `backup-yyyy-mm-dd-short-description` | Follow this custom naming convention. |
-
-> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `sfdisk` or `grub-install`.
-
 ---
 
 ## 💿 Prepare Backup Drive
@@ -25,20 +13,12 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 3. Run **Ventoy2Disk.exe** to flash Ventoy onto the drive.
 4. Download **Clonezilla Live** ISO file (AMD64) from the [official Clonezilla website](https://clonezilla.org/downloads/download.php?branch=stable).
 5. Download latest **Arch Linux** ISO file from the [official Arch Linux website](https://archlinux.org/download/).
-6. Move ISO files into an `ISOs/` folder on the backup drive.
+6. Move ISO files into an `ISOs/` folder on the backup drive:
     ```
     📁 Ventoy Drive Root/
     └── 📁 ISOs/
         ├── clonezilla-live-3.3.3-15-amd64.iso
         └── archlinux-2026.08.01-x86_64.iso
-    
-    # After creating the backup image and saving the partition dump, the drive will look like this:
-    📁 Ventoy Drive Root/
-    ├── 📁 ISOs/                                        # Contains your bootable ISO files
-    │   ├── clonezilla-live-3.3.3-15-amd64.iso
-    │   └── archlinux-2026.08.01-x86_64.iso
-    ├── 📁 backup-yyyy-mm-dd-short-description/         # Renamed from Clonezilla’s auto folder
-    └── 📄 backup-yyyy-mm-dd-short-description.sfdisk   # Partition dump file, aligned to same convention
     ```
 7. Safely eject and remove the Ventoy backup drive.
 
@@ -65,7 +45,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
 17. Clonezilla will ask about time synchronization; skip it if you have no internet connection.
 18. Select **Beginner** mode.
 19. Select **saveparts** for partitions backup.
-20. Name your backup `backup-yyyy-mm-dd-short-description` without extension.
+20. Name your backup `yyyy-mm-dd-short-description` without extension.
 21. Select partitions you want to back up. By default, select both EFI (`nvme0n1p1`) and Btrfs (`nvme0n1p2`) partitions.
 22. Select **-z9p** compression.
 23. Select **-sfsck** to skip filesystem check.
@@ -87,7 +67,7 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     lsblk
     
     # Dump partition table directly to the already-mounted backup drive
-    sudo sfdisk -d /dev/nvme0n1 > /home/partimag/backup-yyyy-mm-dd-short-description.sfdisk
+    sudo sfdisk -d /dev/nvme0n1 > /home/partimag/yyyy-mm-dd-short-description.sfdisk
     
     # Flush buffers
     sync
@@ -126,10 +106,10 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     sudo umount /dev/nvme0n1p* 2>/dev/null
 
     # Print the table to be restored so you can visually confirm it is the correct one
-    cat /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+    cat /mnt/backup/yyyy-mm-dd-short-description.sfdisk
 
     # Restore partition table
-    sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+    sudo sfdisk /dev/nvme0n1 < /mnt/backup/yyyy-mm-dd-short-description.sfdisk
 
     # Force kernel to re-read the updated partition table
     sudo partprobe /dev/nvme0n1
@@ -137,8 +117,10 @@ The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Dependi
     # Flush buffers
     sync
     
-    # Clean up and return to the wizard
+    # Clean up
     sudo umount /mnt/backup
+
+    # Exit the shell, you will return to Clonezilla
     exit
     ```
 10. Select **Start Clonezilla**.

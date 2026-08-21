@@ -25,8 +25,8 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     ├── 📁 ISOs/                                        # Contains your bootable ISO files
     │   ├── clonezilla-live-3.3.3-15-amd64.iso
     │   └── archlinux-2026.08.01-x86_64.iso
-    ├── 📁 backup-yyyy-mm-dd-short-description/         # Renamed from Clonezilla’s auto folder
-    └── 📄 backup-yyyy-mm-dd-short-description.sfdisk   # Partition dump file, aligned to same convention
+    ├── 📁 yyyy-mm-dd-short-description/                # Renamed from Clonezilla’s auto folder
+    └── 📄 yyyy-mm-dd-short-description.sfdisk          # Partition dump file, aligned to same convention
     ```
 7. Safely eject and remove the Ventoy backup drive.
 
@@ -53,7 +53,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
 17. Clonezilla will ask about time synchronization; skip it if you have no internet connection.
 18. Select **Beginner** mode.
 19. Select **saveparts** for partitions backup.
-20. Name your backup `backup-yyyy-mm-dd-short-description` without extension.
+20. Name your backup `yyyy-mm-dd-short-description` without extension.
 21. Select partitions you want to back up. By default, select both EFI (`nvme0n1p1`) and Btrfs (`nvme0n1p2`) partitions.
 22. Select **-z9p** compression.
 23. Select **-sfsck** to skip filesystem check.
@@ -75,7 +75,7 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     lsblk
     
     # Dump partition table directly to the already-mounted backup drive
-    sudo sfdisk -d /dev/nvme0n1 > /home/partimag/backup-yyyy-mm-dd-short-description.sfdisk
+    sudo sfdisk -d /dev/nvme0n1 > /home/partimag/yyyy-mm-dd-short-description.sfdisk
     
     # Flush buffers
     sync
@@ -114,10 +114,10 @@ This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of clonin
     sudo umount /dev/nvme0n1p* 2>/dev/null
 
     # Print the table to be restored so you can visually confirm it is the correct one
-    cat /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+    cat /mnt/backup/yyyy-mm-dd-short-description.sfdisk
 
     # Restore partition table
-    sudo sfdisk /dev/nvme0n1 < /mnt/backup/backup-yyyy-mm-dd-short-description.sfdisk
+    sudo sfdisk /dev/nvme0n1 < /mnt/backup/yyyy-mm-dd-short-description.sfdisk
 
     # Force kernel to re-read the updated partition table
     sudo partprobe /dev/nvme0n1

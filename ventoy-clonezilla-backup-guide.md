@@ -4,18 +4,6 @@
 
 This guide is my go-to for backing up my Lenovo ThinkPad X280. Instead of cloning the whole disk, we’re only backing up the EFI and Btrfs partitions — it’s faster, cleaner, and keeps your data organized. I use a 120GB Hikvision SSD in an ORICO enclosure, but any external drive works.
 
-The parameters in this guide are tailored to a **Lenovo ThinkPad X280**. Depending on your hardware, device node names and file names may vary:
-
-| Variable | Example / Placeholder | Description |
-| :--- | :--- | :--- |
-| **Internal Drive** | `/dev/nvme0n1` | Target disk (e.g., `/dev/sda` for SATA). |
-| **EFI Partition** | `/dev/nvme0n1p1` | 1 GB FAT32 partition for UEFI boot files. |
-| **Root Partition** | `/dev/nvme0n1p2` | Btrfs filesystem partition. |
-| **Backup Drive** | `/dev/sdb1` | External USB partition (verify via `lsblk`). |
-| **Backup Name** | `backup-yyyy-mm-dd-short-description` | Follow this custom naming convention. |
-
-> **Note:** Always verify device nodes via `lsblk` before running destructive commands like `sfdisk` or `grub-install`.
-
 ---
 
 ## 💿 Prepare Backup Drive
